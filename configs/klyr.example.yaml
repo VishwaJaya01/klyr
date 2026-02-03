@@ -1,0 +1,69 @@
+configVersion: 1
+
+server:
+  listen: ":8443"
+  tls:
+    enabled: false
+    certFile: ""
+    keyFile: ""
+
+upstreams:
+  - name: demo-app
+    url: "http://demo-app:8080"
+
+routes:
+  - match:
+      host: ""
+      pathPrefix: "/"
+    upstream: demo-app
+    policy: default
+
+policies:
+  default:
+    mode: learn
+    anomalyThreshold: 8
+    limits:
+      maxBodyBytes: 1048576
+      maxHeaderBytes: 1048576
+      timeout: 5s
+    contract:
+      path: "contract.json"
+      learnWindow: 2m
+      minSamples: 50
+      enforcement: moderate
+    rateLimit:
+      enabled: true
+      key: ip_path
+      rps: 5
+      burst: 10
+      statusCode: 429
+    actions:
+      blockStatusCode: 403
+      blockBody: "request blocked"
+
+rules:
+  - id: sqli-regex-basic
+    phase: query
+    score: 5
+    tags: ["sqli"]
+    transforms: ["lowercase"]
+    match:
+      type: regex
+      pattern: "(?i)\\bor\\s+1=1\\b"
+  - id: sqli-aho-basic
+    phase: query
+    score: 5
+    tags: ["sqli"]
+    transforms: ["lowercase"]
+    match:
+      type: aho
+      patternsFile: "../rules/sqli.txt"
+
+logging:
+  level: info
+  format: json
+  decisionLog: "logs/decisions.jsonl"
+
+metrics:
+  enabled: true
+  listen: ":9095"
