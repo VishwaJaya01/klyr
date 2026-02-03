@@ -45,6 +45,10 @@ Then follow `docs/quickstart.md` for learn → enforce, sample curls, and Grafan
 
 Prometheus metrics are available on `/metrics` and exposed via `metrics.listen`.
 
+## Release
+
+See `docs/release.md` for the tag and publish steps and a release notes template.
+
 ## Development
 
 ```bash
