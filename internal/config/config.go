@@ -108,3 +108,11 @@ const (
 	ModeEnforce = "enforce"
 	ModeShadow  = "shadow"
 )
+
+func (c *Config) BaseDir() string {
+	return c.baseDir
+}
+
+func (c *Config) ResolvePath(path string) string {
+	return c.resolvePath(path)
+}

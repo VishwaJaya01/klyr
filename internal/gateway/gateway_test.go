@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -94,7 +95,7 @@ func sampleConfig(upstreamURL string, maxBodyBytes, maxHeaderBytes int64) *confi
 		},
 		Policies: map[string]config.Policy{
 			"default": {
-				Mode:             config.ModeEnforce,
+				Mode:             config.ModeShadow,
 				AnomalyThreshold: 0,
 				Limits: config.Limits{
 					MaxBodyBytes:   maxBodyBytes,
@@ -103,5 +104,36 @@ func sampleConfig(upstreamURL string, maxBodyBytes, maxHeaderBytes int64) *confi
 				},
 			},
 		},
+	}
+}
+
+func TestRateLimitKey(t *testing.T) {
+	got := ratelimitKey("ip_path", "203.0.113.1", "/login")
+	if got != "203.0.113.1|/login" {
+		t.Fatalf("expected ip_path key, got %q", got)
+	}
+
+	got = ratelimitKey("ip", "203.0.113.1", "/login")
+	if got != "203.0.113.1" {
+		t.Fatalf("expected ip key, got %q", got)
+	}
+}
+
+func TestHeadersForEvalRedactsSensitive(t *testing.T) {
+	headers := http.Header{
+		"Authorization": []string{"secret"},
+		"Cookie":        []string{"a=b"},
+		"X-Test":        []string{"ok"},
+	}
+
+	out := headersForEval(headers)
+	if !strings.Contains(out, "Authorization: <redacted>") {
+		t.Fatalf("expected authorization redacted, got %q", out)
+	}
+	if !strings.Contains(out, "Cookie: <redacted>") {
+		t.Fatalf("expected cookie redacted, got %q", out)
+	}
+	if !strings.Contains(out, "X-Test: ok") {
+		t.Fatalf("expected X-Test value, got %q", out)
 	}
 }
