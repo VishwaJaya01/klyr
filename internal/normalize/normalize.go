@@ -14,7 +14,7 @@ type Options struct {
 }
 
 type Result struct {
-	Raw       string
+	Raw        string
 	Normalized string
 }
 

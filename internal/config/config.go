@@ -78,12 +78,12 @@ type PolicyActionSpec struct {
 }
 
 type Rule struct {
-	ID         string     `yaml:"id"`
-	Phase      string     `yaml:"phase"`
-	Score      int        `yaml:"score"`
-	Tags       []string   `yaml:"tags"`
-	Transforms []string   `yaml:"transforms"`
-	Match      RuleMatch  `yaml:"match"`
+	ID         string    `yaml:"id"`
+	Phase      string    `yaml:"phase"`
+	Score      int       `yaml:"score"`
+	Tags       []string  `yaml:"tags"`
+	Transforms []string  `yaml:"transforms"`
+	Match      RuleMatch `yaml:"match"`
 }
 
 type RuleMatch struct {
