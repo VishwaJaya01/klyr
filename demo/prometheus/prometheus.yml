@@ -1,1 +1,7 @@
-# TODO: add Prometheus scrape config for Klyr.
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: klyr
+    static_configs:
+      - targets: ["klyr:9095"]
