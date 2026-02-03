@@ -59,7 +59,9 @@ func newValidateCmd() *cobra.Command {
 			if err := cfg.Validate(); err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), "config ok")
+			if _, err := fmt.Fprintln(cmd.OutOrStdout(), "config ok"); err != nil {
+				return err
+			}
 			return nil
 		},
 	}
@@ -74,7 +76,7 @@ func newVersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print version information",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Fprintf(cmd.OutOrStdout(), "version=%s commit=%s buildDate=%s\n", version, commit, buildDate)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "version=%s commit=%s buildDate=%s\n", version, commit, buildDate)
 		},
 	}
 }

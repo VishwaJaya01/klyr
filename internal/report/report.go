@@ -48,7 +48,7 @@ func (r *Reader) Read(path string) ([]logging.Decision, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	var decisions []logging.Decision
 	scanner := bufio.NewScanner(file)

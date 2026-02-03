@@ -2,7 +2,6 @@ package contract
 
 import (
 	"net/http"
-	"sort"
 	"strings"
 )
 
@@ -37,13 +36,4 @@ func parseContentType(value string) string {
 	}
 	parts := strings.Split(value, ";")
 	return strings.TrimSpace(strings.ToLower(parts[0]))
-}
-
-func sortedKeys(m map[string]bool) []string {
-	keys := make([]string, 0, len(m))
-	for key := range m {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys
 }
