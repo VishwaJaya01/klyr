@@ -221,12 +221,12 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ratelimitKey := ""
+	rlKey := ""
 	ratelimitLabel := ""
 	if policyCfg.RateLimit.Enabled {
-		ratelimitKey = ratelimitKey(policyCfg.RateLimit.Key, decision.ClientIP, r.URL.Path)
+		rlKey = ratelimitKey(policyCfg.RateLimit.Key, decision.ClientIP, r.URL.Path)
 		ratelimitLabel = policyCfg.RateLimit.Key
-		allowed := g.limiter.Allow(ratelimitKey, policyCfg.RateLimit.RPS, policyCfg.RateLimit.Burst, time.Now())
+		allowed := g.limiter.Allow(rlKey, policyCfg.RateLimit.RPS, policyCfg.RateLimit.Burst, time.Now())
 		if !allowed {
 			decision.RateLimited = true
 			decision.Action = string(policy.ActionBlock)
