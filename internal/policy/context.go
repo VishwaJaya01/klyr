@@ -1,10 +1,13 @@
 package policy
 
-import "github.com/klyr/klyr/internal/normalize"
+type Field struct {
+	Raw        string
+	Normalized string
+}
 
 type EvalContext struct {
-	RequestLine normalize.Result
-	Headers     normalize.Result
-	Query       normalize.Result
-	Body        normalize.Result
+	RequestLine Field
+	Headers     Field
+	Query       Field
+	Body        Field
 }
