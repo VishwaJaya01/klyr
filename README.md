@@ -4,49 +4,59 @@ Klyr is a local-first security gateway (reverse proxy) written in Go. It provide
 
 Klyr targets individuals and small teams who want practical protection and visibility without enterprise complexity.
 
-**Status**: v0.1 in active development. Scope is intentionally small and focused.
+**Status**: v0.1.0
 
-**Key Features**
-- High-performance reverse proxy with routing by host and path prefix
-- Deterministic request normalization pipeline (bounded decoding)
-- Rule engine with regex and Aho-Corasick matching
+## Features
+
+- Reverse proxy routing by host and path prefix
+- Deterministic request normalization (bounded decoding)
+- Regex and Aho-Corasick rule matching
 - Anomaly scoring with explainable block decisions
 - Learn → Enforce traffic contracts (behavior allowlisting)
-- Rate limiting (in-memory token bucket)
-- Decision logs (JSONL) and Prometheus metrics
+- In-memory rate limiting (token bucket)
+- JSONL decision logs and Prometheus metrics
 
-**Quickstart**
-- See `docs/quickstart.md` for the full demo flow (Docker Compose, learn → enforce, sample curls, and Grafana).
+## Quickstart
 
-**Configuration**
-- Example config: `configs/klyr.example.yaml`
-- Rule pattern files: `rules/`
-- Profiles: `configs/profiles/`
+Use the demo stack with Docker Compose:
 
-**CLI (v0.1)**
-- `klyr run`
-- `klyr learn`
-- `klyr enforce`
-- `klyr report`
-- `klyr validate`
+```bash
+make demo
+```
+
+Then follow `docs/quickstart.md` for learn → enforce, sample curls, and Grafana.
+
+## CLI
+
+- `klyr run -c <config>`
+- `klyr learn -c <config> --duration 2m --out /state/contract.json`
+- `klyr enforce -c <config> --contract /state/contract.json`
+- `klyr report --in logs/decisions.jsonl --since 10m --format md --out report.md`
+- `klyr validate -c <config>`
 - `klyr version`
 
-**Observability**
-- Prometheus metrics at `/metrics` (configurable listen address)
-- Starter Grafana dashboard in `demo/grafana/dashboards/`
+## Configuration
 
-**Development**
-- Build: `make build`
-- Test: `make test`
-- Lint: `make lint`
-- Demo: `make demo`
+- Example config: `configs/klyr.example.yaml`
+- Demo config: `demo/klyr.demo.yaml`
+- Rule patterns: `rules/`
 
-**Security & Privacy**
-- Klyr never logs secrets (Authorization/Cookie values)
-- Decision logs include limited redacted evidence snippets
+## Metrics
 
-**License**
-- MIT (see `LICENSE`)
+Prometheus metrics are available on `/metrics` and exposed via `metrics.listen`.
 
-**Future Work**
-- See `docs/architecture.md` and `docs/threat-model.md` for scope and rationale. Future items will be tracked there.
+## Development
+
+```bash
+make build
+make test
+make lint
+```
+
+## License
+
+MIT
+
+## Future Work
+
+See `docs/architecture.md` and `docs/threat-model.md`.
