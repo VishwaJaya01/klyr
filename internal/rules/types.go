@@ -19,8 +19,8 @@ const (
 )
 
 const (
-	TransformLowercase   Transform = "lowercase"
-	TransformHTMLEntity  Transform = "html_entity"
+	TransformLowercase     Transform = "lowercase"
+	TransformHTMLEntity    Transform = "html_entity"
 	TransformPathNormalize Transform = "normalize_path"
 )
 
@@ -34,10 +34,10 @@ type Rule struct {
 }
 
 type Match struct {
-	RuleID  string
-	Phase   Phase
-	Score   int
-	Tags    []string
+	RuleID   string
+	Phase    Phase
+	Score    int
+	Tags     []string
 	Evidence string
 }
 

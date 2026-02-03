@@ -35,10 +35,10 @@ func (e *Engine) Evaluate(ctx policy.EvalContext) Result {
 
 		result.Score += rule.Score
 		result.Matches = append(result.Matches, Match{
-			RuleID:  rule.ID,
-			Phase:   rule.Phase,
-			Score:   rule.Score,
-			Tags:    append([]string(nil), rule.Tags...),
+			RuleID:   rule.ID,
+			Phase:    rule.Phase,
+			Score:    rule.Score,
+			Tags:     append([]string(nil), rule.Tags...),
 			Evidence: evidence,
 		})
 	}
