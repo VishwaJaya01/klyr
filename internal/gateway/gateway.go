@@ -19,6 +19,7 @@ import (
 	"github.com/klyr/klyr/internal/config"
 	"github.com/klyr/klyr/internal/contract"
 	"github.com/klyr/klyr/internal/logging"
+	"github.com/klyr/klyr/internal/observability"
 	"github.com/klyr/klyr/internal/policy"
 	"github.com/klyr/klyr/internal/ratelimit"
 	"github.com/klyr/klyr/internal/rules"
@@ -32,11 +33,13 @@ type Gateway struct {
 	policies  map[string]config.Policy
 	proxies   map[string]*httputil.ReverseProxy
 
-	engine       *rules.Engine
-	contracts    map[string]*contract.Contract
-	decisionLog  *logging.DecisionLogger
-	limiter      *ratelimit.Limiter
-	bodyRules    bool
+	engine      *rules.Engine
+	contracts   map[string]*contract.Contract
+	decisionLog *logging.DecisionLogger
+	metrics     *observability.Metrics
+	limiter     *ratelimit.Limiter
+	bodyRules   bool
+
 	requestCount uint64
 }
 
@@ -126,6 +129,10 @@ func (g *Gateway) SetDecisionLogger(logger *logging.DecisionLogger) {
 	g.decisionLog = logger
 }
 
+func (g *Gateway) SetMetrics(metrics *observability.Metrics) {
+	g.metrics = metrics
+}
+
 func (g *Gateway) SaveContracts(cfg *config.Config) error {
 	if cfg == nil {
 		return nil
@@ -179,7 +186,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if exceedsHeaderLimit(r.Header, policyCfg.Limits.MaxHeaderBytes) {
 		decision.Action = string(policy.ActionBlock)
 		decision.StatusCode = http.StatusRequestHeaderFieldsTooLarge
-		g.writeDecision(decision, start, 0)
+		g.writeDecision(decision, start, 0, "rule", nil, nil, "")
 		http.Error(w, "request headers too large", http.StatusRequestHeaderFieldsTooLarge)
 		return
 	}
@@ -188,7 +195,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if r.ContentLength > policyCfg.Limits.MaxBodyBytes {
 			decision.Action = string(policy.ActionBlock)
 			decision.StatusCode = http.StatusRequestEntityTooLarge
-			g.writeDecision(decision, start, 0)
+			g.writeDecision(decision, start, 0, "rule", nil, nil, "")
 			http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
 			return
 		}
@@ -202,19 +209,20 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if bodyErr != nil {
 		decision.Action = string(policy.ActionBlock)
 		decision.StatusCode = http.StatusRequestEntityTooLarge
-		g.writeDecision(decision, start, 0)
+		g.writeDecision(decision, start, 0, "rule", nil, nil, "")
 		http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
 		return
 	}
 
+	ratelimitKey := ""
 	if policyCfg.RateLimit.Enabled {
-		key := ratelimitKey(policyCfg.RateLimit.Key, decision.ClientIP, r.URL.Path)
-		allowed := g.limiter.Allow(key, policyCfg.RateLimit.RPS, policyCfg.RateLimit.Burst, time.Now())
+		ratelimitKey = ratelimitKey(policyCfg.RateLimit.Key, decision.ClientIP, r.URL.Path)
+		allowed := g.limiter.Allow(ratelimitKey, policyCfg.RateLimit.RPS, policyCfg.RateLimit.Burst, time.Now())
 		if !allowed {
 			decision.RateLimited = true
 			decision.Action = string(policy.ActionBlock)
 			decision.StatusCode = rateLimitStatus(policyCfg.RateLimit.StatusCode)
-			g.writeDecision(decision, start, 0)
+			g.writeDecision(decision, start, 0, "ratelimit", nil, nil, ratelimitKey)
 			http.Error(w, "rate limit exceeded", decision.StatusCode)
 			return
 		}
@@ -231,7 +239,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if policyCfg.Mode == config.ModeEnforce {
 			decision.Action = string(policy.ActionBlock)
 			decision.StatusCode = blockStatus(policyCfg)
-			g.writeDecision(decision, start, 0)
+			g.writeDecision(decision, start, 0, "contract", decision.MatchedRules, decision.ContractViolations, ratelimitKey)
 			http.Error(w, policyCfg.Actions.BlockBody, decision.StatusCode)
 			return
 		}
@@ -241,7 +249,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	decision.Action = string(action)
 	if shouldBlock {
 		decision.StatusCode = blockStatus(policyCfg)
-		g.writeDecision(decision, start, 0)
+		g.writeDecision(decision, start, 0, "rule", decision.MatchedRules, decision.ContractViolations, ratelimitKey)
 		http.Error(w, policyCfg.Actions.BlockBody, decision.StatusCode)
 		return
 	}
@@ -251,7 +259,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(rec, req)
 	decision.StatusCode = rec.status
 	decision.UpstreamMS = time.Since(start).Milliseconds()
-	g.writeDecision(decision, start, decision.UpstreamMS)
+	g.writeDecision(decision, start, decision.UpstreamMS, "", decision.MatchedRules, decision.ContractViolations, ratelimitKey)
 }
 
 func (g *Gateway) checkContract(routeID, policyName string, policyCfg config.Policy, r *http.Request, bodySize int64) []contract.Violation {
@@ -292,13 +300,15 @@ func (g *Gateway) resolveRoute(r *http.Request) (Route, config.Policy, *httputil
 	return route, policyCfg, proxy, true
 }
 
-func (g *Gateway) writeDecision(decision logging.Decision, start time.Time, upstreamMS int64) {
+func (g *Gateway) writeDecision(decision logging.Decision, start time.Time, upstreamMS int64, reason string, matches []logging.MatchedRule, violations []logging.ContractViolation, ratelimitKey string) {
 	decision.DurationMS = time.Since(start).Milliseconds()
 	decision.UpstreamMS = upstreamMS
-	if g.decisionLog == nil {
-		return
+	if g.decisionLog != nil {
+		_ = g.decisionLog.Write(decision)
 	}
-	_ = g.decisionLog.Write(decision)
+	if g.metrics != nil {
+		g.metrics.Observe(decision, matches, violations, ratelimitKey, reason)
+	}
 }
 
 func (g *Gateway) newRequestID() string {
