@@ -25,7 +25,7 @@ func main() {
 	root.AddCommand(newRunCmd())
 	root.AddCommand(newLearnCmd())
 	root.AddCommand(newEnforceCmd())
-	root.AddCommand(stubCmd("report"))
+	root.AddCommand(newReportCmd())
 	root.AddCommand(newValidateCmd())
 	root.AddCommand(newVersionCmd())
 
@@ -75,16 +75,6 @@ func newVersionCmd() *cobra.Command {
 		Short: "Print version information",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Fprintf(cmd.OutOrStdout(), "version=%s commit=%s buildDate=%s\n", version, commit, buildDate)
-		},
-	}
-}
-
-func stubCmd(name string) *cobra.Command {
-	return &cobra.Command{
-		Use:   name,
-		Short: fmt.Sprintf("%s (not implemented yet)", name),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return fmt.Errorf("%s command not implemented yet", name)
 		},
 	}
 }
