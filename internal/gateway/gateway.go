@@ -446,7 +446,7 @@ func shallowJSON(body []byte) string {
 		if val == "" {
 			continue
 		}
-		fmt.Fprintf(&b, "%s=%s ", key, redactSecrets(val))
+		fmt.Fprintf(&b, "%s=%s ", key, redactKeyValue(key, val))
 	}
 	return strings.TrimSpace(b.String())
 }
@@ -464,6 +464,19 @@ func formatJSONValue(value any) string {
 		return "false"
 	default:
 		return ""
+	}
+}
+
+func redactKeyValue(key string, value string) string {
+	if key == "" || value == "" {
+		return value
+	}
+	lower := strings.ToLower(key)
+	switch lower {
+	case "password", "passwd", "token", "api_key", "apikey", "api-key", "secret":
+		return "<redacted>"
+	default:
+		return redactSecrets(value)
 	}
 }
 
