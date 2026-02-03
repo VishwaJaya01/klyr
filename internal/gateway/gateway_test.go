@@ -137,3 +137,20 @@ func TestHeadersForEvalRedactsSensitive(t *testing.T) {
 		t.Fatalf("expected X-Test value, got %q", out)
 	}
 }
+
+func TestBodyForEvalJSON(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "http://example.com/", strings.NewReader(`{"user":"alice","password":"secret","count":2}`))
+	req.Header.Set("Content-Type", "application/json")
+	body, _ := io.ReadAll(req.Body)
+
+	out := bodyForEval(req, body)
+	if !strings.Contains(out, "user=alice") {
+		t.Fatalf("expected user field, got %q", out)
+	}
+	if strings.Contains(out, "password=secret") {
+		t.Fatalf("expected password redacted, got %q", out)
+	}
+	if !strings.Contains(out, "password=<redacted>") {
+		t.Fatalf("expected password redaction, got %q", out)
+	}
+}

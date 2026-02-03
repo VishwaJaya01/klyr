@@ -15,10 +15,10 @@ This quickstart uses the built-in Docker Compose demo to show learn → enforce,
 make demo
 ```
 
-2) In a new terminal, run learn mode for 2 minutes:
+2) In a new terminal, run learn mode for 2 minutes. If you are running the binary on your host:
 
 ```bash
-./bin/klyr learn -c demo/klyr.demo.yaml --duration 2m --out /state/contract.json
+./bin/klyr learn -c demo/klyr.demo.yaml --duration 2m --out ./state/contract.json
 ```
 
 If you are running from source, build first:
@@ -27,10 +27,22 @@ If you are running from source, build first:
 make build
 ```
 
-3) Enforce using the generated contract:
+If you want to run the command inside the container instead:
 
 ```bash
-./bin/klyr enforce -c demo/klyr.demo.yaml --contract /state/contract.json
+docker compose -f demo/compose.yaml exec klyr /bin/klyr learn -c /config/klyr.yaml --duration 2m --out /state/contract.json
+```
+
+3) Enforce using the generated contract on the host:
+
+```bash
+./bin/klyr enforce -c demo/klyr.demo.yaml --contract ./state/contract.json
+```
+
+Or inside the container:
+
+```bash
+docker compose -f demo/compose.yaml exec klyr /bin/klyr enforce -c /config/klyr.yaml --contract /state/contract.json
 ```
 
 4) Send traffic through Klyr:
@@ -56,7 +68,7 @@ for i in {1..10}; do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8
 
 ## Decision Logs
 
-Decision logs are written to `./logs/decisions.jsonl` (mounted into the container). Each line is a JSON object.
+Decision logs are written to `./logs/decisions.jsonl` on the host (mounted into the container). Each line is a JSON object.
 
 ## Notes
 

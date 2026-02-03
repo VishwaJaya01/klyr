@@ -14,11 +14,14 @@ jobs:
           go-version: '1.22.x'
       - name: Download modules
         run: go mod download ./...
+      - name: Lint (golangci-lint)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.57.2
+          args: --timeout=3m
       - name: Test
         run: go test ./...
       - name: Format check
         run: test -z "$(gofmt -l .)"
-      - name: Lint
-        run: golangci-lint run
       - name: Build
         run: go build ./cmd/klyr

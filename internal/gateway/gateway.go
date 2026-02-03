@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -340,7 +342,7 @@ func mapMatches(matches []rules.Match) []logging.MatchedRule {
 			Phase:    string(m.Phase),
 			Score:    m.Score,
 			Tags:     append([]string(nil), m.Tags...),
-			Evidence: m.Evidence,
+			Evidence: redactSecrets(m.Evidence),
 		}
 	}
 	return out
@@ -359,7 +361,7 @@ func buildEvalContext(r *http.Request, body []byte) rules.EvalContext {
 		RequestLine: rules.Field{Raw: fmt.Sprintf("%s %s", r.Method, r.URL.Path)},
 		Headers:     rules.Field{Raw: headersForEval(r.Header)},
 		Query:       rules.Field{Raw: r.URL.RawQuery},
-		Body:        rules.Field{Raw: string(body)},
+		Body:        rules.Field{Raw: bodyForEval(r, body)},
 	}
 }
 
@@ -388,6 +390,80 @@ func isSensitiveHeader(name string) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+var (
+	secretKVPattern    = regexp.MustCompile(`(?i)\b(password|passwd|token|api[_-]?key|secret)\s*=\s*([^\s&]+)`) // key=value
+	secretBearerPattern = regexp.MustCompile(`(?i)\bbearer\s+[A-Za-z0-9\\-._~+/]+=*`)
+)
+
+func redactSecrets(input string) string {
+	if input == "" {
+		return input
+	}
+	redacted := secretKVPattern.ReplaceAllString(input, `$1=<redacted>`)
+	redacted = secretBearerPattern.ReplaceAllString(redacted, "bearer <redacted>")
+	return redacted
+}
+
+func bodyForEval(r *http.Request, body []byte) string {
+	if len(body) == 0 || r == nil {
+		return ""
+	}
+	ct := strings.ToLower(r.Header.Get("Content-Type"))
+	if strings.Contains(ct, "application/json") {
+		text := shallowJSON(body)
+		if text != "" {
+			return text
+		}
+	}
+	return string(body)
+}
+
+func shallowJSON(body []byte) string {
+	var value any
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	decoder.UseNumber()
+	if err := decoder.Decode(&value); err != nil {
+		return ""
+	}
+
+	obj, ok := value.(map[string]any)
+	if !ok {
+		return ""
+	}
+
+	const maxFields = 50
+	var b strings.Builder
+	count := 0
+	for key, raw := range obj {
+		if count >= maxFields {
+			break
+		}
+		count++
+		val := formatJSONValue(raw)
+		if val == "" {
+			continue
+		}
+		fmt.Fprintf(&b, "%s=%s ", key, redactSecrets(val))
+	}
+	return strings.TrimSpace(b.String())
+}
+
+func formatJSONValue(value any) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case json.Number:
+		return v.String()
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	default:
+		return ""
 	}
 }
 
