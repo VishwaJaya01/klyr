@@ -26,7 +26,7 @@ func Evaluate(c *Contract, req *http.Request, bodySize int64, enforcement Enforc
 		}
 	}
 
-	if enforcement >= EnforcementModerate {
+	if atLeast(enforcement, EnforcementModerate) {
 		for name := range req.URL.Query() {
 			if !c.QueryParams[name] {
 				violations = append(violations, Violation{Type: "query_param_unexpected", Field: name})
@@ -34,7 +34,7 @@ func Evaluate(c *Contract, req *http.Request, bodySize int64, enforcement Enforc
 		}
 	}
 
-	if enforcement >= EnforcementStrict {
+	if atLeast(enforcement, EnforcementStrict) {
 		for name := range req.Header {
 			canon := http.CanonicalHeaderKey(name)
 			if !c.HeaderNames[canon] {
@@ -48,4 +48,21 @@ func Evaluate(c *Contract, req *http.Request, bodySize int64, enforcement Enforc
 	}
 
 	return violations
+}
+
+func atLeast(current, target Enforcement) bool {
+	return enforcementRank(current) >= enforcementRank(target)
+}
+
+func enforcementRank(level Enforcement) int {
+	switch level {
+	case EnforcementLenient:
+		return 1
+	case EnforcementModerate:
+		return 2
+	case EnforcementStrict:
+		return 3
+	default:
+		return 1
+	}
 }
