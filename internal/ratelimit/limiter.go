@@ -18,10 +18,10 @@ type Limiter struct {
 }
 
 type bucket struct {
-	okens   float64
-	last    time.Time
-	burst   float64
-	perSec  float64
+	tokens float64
+	last   time.Time
+	burst  float64
+	perSec float64
 }
 
 func NewLimiter() *Limiter {
@@ -43,10 +43,10 @@ func (l *Limiter) Allow(key string, rps float64, burst int, now time.Time) bool 
 	b, ok := l.buckets[key]
 	if !ok {
 		b = &bucket{
-			tokens:  float64(burst),
-			last:    now,
-			burst:   float64(burst),
-			perSec:  rps,
+			tokens: float64(burst),
+			last:   now,
+			burst:  float64(burst),
+			perSec: rps,
 		}
 		l.buckets[key] = b
 	}
