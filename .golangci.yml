@@ -9,7 +9,6 @@ linters:
     - errcheck
     - staticcheck
     - ineffassign
-    - gosimple
 
 issues:
   exclude-rules:
