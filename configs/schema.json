@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Klyr Config v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "configVersion": {
+      "type": "integer",
+      "const": 1
+    }
+  }
+}

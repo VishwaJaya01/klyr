@@ -1,0 +1,41 @@
+{
+  "title": "Klyr (starter)",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests by action",
+      "targets": [
+        {
+          "expr": "sum by (action) (klyr_requests_total)",
+          "legendFormat": "{{action}}"
+        }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "type": "timeseries",
+      "title": "Blocks by reason",
+      "targets": [
+        {
+          "expr": "sum by (reason) (klyr_blocks_total)",
+          "legendFormat": "{{reason}}"
+        }
+      ],
+      "datasource": "Prometheus"
+    },
+    {
+      "type": "timeseries",
+      "title": "Request duration p95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(klyr_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "datasource": "Prometheus"
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

@@ -1,0 +1,45 @@
+services:
+  demo-app:
+    build:
+      context: .
+      dockerfile: demo/app/Dockerfile
+    ports:
+      - "8080:8080"
+
+  klyr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["/bin/klyr", "run", "-c", "/config/klyr.yaml"]
+    ports:
+      - "8443:8443"
+      - "9095:9095"
+    volumes:
+      - ./demo/klyr.demo.yaml:/config/klyr.yaml:ro
+      - ./rules:/rules:ro
+      - ./logs:/logs
+      - ./state:/state
+    depends_on:
+      - demo-app
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./demo/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - klyr
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./demo/grafana/provisioning:/etc/grafana/provisioning
+      - ./demo/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus

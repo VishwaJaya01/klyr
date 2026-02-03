@@ -1,0 +1,18 @@
+# Build artifacts
+/bin/
+/dist/
+
+# Local state
+/logs/
+/state/
+/tmp/
+
+# Go
+*.exe
+*.out
+*.test
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
