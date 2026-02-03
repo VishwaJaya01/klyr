@@ -133,6 +133,13 @@ func (g *Gateway) SetMetrics(metrics *observability.Metrics) {
 	g.metrics = metrics
 }
 
+func (g *Gateway) Contract(routeID, policyName string) *contract.Contract {
+	if g == nil {
+		return nil
+	}
+	return g.contracts[contractKey(routeID, policyName)]
+}
+
 func (g *Gateway) SaveContracts(cfg *config.Config) error {
 	if cfg == nil {
 		return nil
@@ -215,14 +222,16 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ratelimitKey := ""
+	ratelimitLabel := ""
 	if policyCfg.RateLimit.Enabled {
 		ratelimitKey = ratelimitKey(policyCfg.RateLimit.Key, decision.ClientIP, r.URL.Path)
+		ratelimitLabel = policyCfg.RateLimit.Key
 		allowed := g.limiter.Allow(ratelimitKey, policyCfg.RateLimit.RPS, policyCfg.RateLimit.Burst, time.Now())
 		if !allowed {
 			decision.RateLimited = true
 			decision.Action = string(policy.ActionBlock)
 			decision.StatusCode = rateLimitStatus(policyCfg.RateLimit.StatusCode)
-			g.writeDecision(decision, start, 0, "ratelimit", nil, nil, ratelimitKey)
+			g.writeDecision(decision, start, 0, "ratelimit", nil, nil, ratelimitLabel)
 			http.Error(w, "rate limit exceeded", decision.StatusCode)
 			return
 		}
@@ -239,7 +248,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if policyCfg.Mode == config.ModeEnforce {
 			decision.Action = string(policy.ActionBlock)
 			decision.StatusCode = blockStatus(policyCfg)
-			g.writeDecision(decision, start, 0, "contract", decision.MatchedRules, decision.ContractViolations, ratelimitKey)
+			g.writeDecision(decision, start, 0, "contract", decision.MatchedRules, decision.ContractViolations, ratelimitLabel)
 			http.Error(w, policyCfg.Actions.BlockBody, decision.StatusCode)
 			return
 		}
@@ -249,7 +258,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	decision.Action = string(action)
 	if shouldBlock {
 		decision.StatusCode = blockStatus(policyCfg)
-		g.writeDecision(decision, start, 0, "rule", decision.MatchedRules, decision.ContractViolations, ratelimitKey)
+		g.writeDecision(decision, start, 0, "rule", decision.MatchedRules, decision.ContractViolations, ratelimitLabel)
 		http.Error(w, policyCfg.Actions.BlockBody, decision.StatusCode)
 		return
 	}
@@ -259,7 +268,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(rec, req)
 	decision.StatusCode = rec.status
 	decision.UpstreamMS = time.Since(start).Milliseconds()
-	g.writeDecision(decision, start, decision.UpstreamMS, "", decision.MatchedRules, decision.ContractViolations, ratelimitKey)
+	g.writeDecision(decision, start, decision.UpstreamMS, "", decision.MatchedRules, decision.ContractViolations, ratelimitLabel)
 }
 
 func (g *Gateway) checkContract(routeID, policyName string, policyCfg config.Policy, r *http.Request, bodySize int64) []contract.Violation {

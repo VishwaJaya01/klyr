@@ -22,11 +22,11 @@ func main() {
 		SilenceUsage: true,
 	}
 
-	root.AddCommand(newValidateCmd())
-	root.AddCommand(stubCmd("run"))
-	root.AddCommand(stubCmd("learn"))
-	root.AddCommand(stubCmd("enforce"))
+	root.AddCommand(newRunCmd())
+	root.AddCommand(newLearnCmd())
+	root.AddCommand(newEnforceCmd())
 	root.AddCommand(stubCmd("report"))
+	root.AddCommand(newValidateCmd())
 	root.AddCommand(newVersionCmd())
 
 	if err := root.Execute(); err != nil {
