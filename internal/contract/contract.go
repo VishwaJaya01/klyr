@@ -11,16 +11,16 @@ const (
 )
 
 type Contract struct {
-	RouteID       string            `json:"route_id"`
-	Policy        string            `json:"policy"`
-	GeneratedAt   time.Time         `json:"generated_at"`
-	Samples       int               `json:"samples"`
-	Methods       map[string]bool   `json:"methods"`
-	ContentTypes  map[string]bool   `json:"content_types"`
-	QueryParams   map[string]bool   `json:"query_params"`
-	HeaderNames   map[string]bool   `json:"header_names"`
-	MaxBodyBytes  int64             `json:"max_body_bytes"`
-	ObservedMax   int64             `json:"observed_max_body_bytes"`
+	RouteID      string          `json:"route_id"`
+	Policy       string          `json:"policy"`
+	GeneratedAt  time.Time       `json:"generated_at"`
+	Samples      int             `json:"samples"`
+	Methods      map[string]bool `json:"methods"`
+	ContentTypes map[string]bool `json:"content_types"`
+	QueryParams  map[string]bool `json:"query_params"`
+	HeaderNames  map[string]bool `json:"header_names"`
+	MaxBodyBytes int64           `json:"max_body_bytes"`
+	ObservedMax  int64           `json:"observed_max_body_bytes"`
 }
 
 func New(routeID, policy string) *Contract {
