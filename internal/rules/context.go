@@ -1,4 +1,4 @@
-package policy
+package rules
 
 type Field struct {
 	Raw        string

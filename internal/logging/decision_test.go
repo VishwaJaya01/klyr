@@ -13,9 +13,9 @@ func TestDecisionLoggerWritesJSONL(t *testing.T) {
 	logger := NewDecisionLogger(&buf)
 
 	decision := Decision{
-		Timestamp:  time.Date(2026, 2, 3, 10, 0, 0, 0, time.UTC),
-		RequestID:  "req-1",
-		Action:     "block",
+		Timestamp: time.Date(2026, 2, 3, 10, 0, 0, 0, time.UTC),
+		RequestID: "req-1",
+		Action:    "block",
 		MatchedRules: []MatchedRule{{
 			ID:       "rule-1",
 			Phase:    "query",

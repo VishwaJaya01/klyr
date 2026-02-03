@@ -1,10 +1,6 @@
 package rules
 
-import (
-	"testing"
-
-	"github.com/klyr/klyr/internal/policy"
-)
+import "testing"
 
 func TestEngineRegexMatch(t *testing.T) {
 	matcher, err := NewRegexMatcher("(?i)<script>")
@@ -23,8 +19,8 @@ func TestEngineRegexMatch(t *testing.T) {
 		},
 	}}
 
-	ctx := policy.EvalContext{
-		Query: policy.Field{Raw: "%3CScRipT%3E"},
+	ctx := EvalContext{
+		Query: Field{Raw: "%3CScRipT%3E"},
 	}
 
 	result := engine.Evaluate(ctx)
@@ -56,8 +52,8 @@ func TestEngineAhoMatch(t *testing.T) {
 		},
 	}}
 
-	ctx := policy.EvalContext{
-		Query: policy.Field{Raw: "q=1 Or 1=1"},
+	ctx := EvalContext{
+		Query: Field{Raw: "q=1 Or 1=1"},
 	}
 
 	result := engine.Evaluate(ctx)

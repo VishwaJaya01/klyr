@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/klyr/klyr/internal/normalize"
-	"github.com/klyr/klyr/internal/policy"
 )
 
 const defaultDecodeDepth = 2
@@ -14,7 +13,7 @@ type Engine struct {
 	Rules []Rule
 }
 
-func (e *Engine) Evaluate(ctx policy.EvalContext) Result {
+func (e *Engine) Evaluate(ctx EvalContext) Result {
 	result := Result{}
 
 	for _, rule := range e.Rules {
@@ -46,7 +45,7 @@ func (e *Engine) Evaluate(ctx policy.EvalContext) Result {
 	return result
 }
 
-func selectPhaseInput(ctx policy.EvalContext, phase Phase) (string, bool) {
+func selectPhaseInput(ctx EvalContext, phase Phase) (string, bool) {
 	switch phase {
 	case PhaseRequestLine:
 		return ctx.RequestLine.Raw, true

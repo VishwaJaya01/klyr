@@ -12,25 +12,25 @@ const maxEvidence = 64
 
 // Decision is written as a single JSON object per request.
 type Decision struct {
-	Timestamp         time.Time           `json:"ts"`
-	RequestID         string              `json:"request_id"`
-	ClientIP          string              `json:"client_ip"`
-	Host              string              `json:"host"`
-	Method            string              `json:"method"`
-	Path              string              `json:"path"`
-	Query             string              `json:"query"`
-	RouteID           string              `json:"route_id"`
-	Policy            string              `json:"policy"`
-	Mode              string              `json:"mode"`
-	Score             int                 `json:"score"`
-	Threshold         int                 `json:"threshold"`
-	Action            string              `json:"action"`
-	StatusCode        int                 `json:"status_code"`
-	MatchedRules      []MatchedRule       `json:"matched_rules"`
+	Timestamp          time.Time           `json:"ts"`
+	RequestID          string              `json:"request_id"`
+	ClientIP           string              `json:"client_ip"`
+	Host               string              `json:"host"`
+	Method             string              `json:"method"`
+	Path               string              `json:"path"`
+	Query              string              `json:"query"`
+	RouteID            string              `json:"route_id"`
+	Policy             string              `json:"policy"`
+	Mode               string              `json:"mode"`
+	Score              int                 `json:"score"`
+	Threshold          int                 `json:"threshold"`
+	Action             string              `json:"action"`
+	StatusCode         int                 `json:"status_code"`
+	MatchedRules       []MatchedRule       `json:"matched_rules"`
 	ContractViolations []ContractViolation `json:"contract_violations"`
-	RateLimited       bool                `json:"rate_limited"`
-	DurationMS        int64               `json:"duration_ms"`
-	UpstreamMS        int64               `json:"upstream_ms"`
+	RateLimited        bool                `json:"rate_limited"`
+	DurationMS         int64               `json:"duration_ms"`
+	UpstreamMS         int64               `json:"upstream_ms"`
 }
 
 type MatchedRule struct {

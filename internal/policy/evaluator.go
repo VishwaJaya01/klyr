@@ -10,7 +10,7 @@ const (
 	ActionShadow Action = "shadow"
 )
 
-func EvaluateRules(engine *rules.Engine, ctx EvalContext) rules.Result {
+func EvaluateRules(engine *rules.Engine, ctx rules.EvalContext) rules.Result {
 	if engine == nil {
 		return rules.Result{}
 	}
