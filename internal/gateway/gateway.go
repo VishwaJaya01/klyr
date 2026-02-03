@@ -394,8 +394,8 @@ func isSensitiveHeader(name string) bool {
 }
 
 var (
-	secretKVPattern    = regexp.MustCompile(`(?i)\b(password|passwd|token|api[_-]?key|secret)\s*=\s*([^\s&]+)`) // key=value
-	secretBearerPattern = regexp.MustCompile(`(?i)\bbearer\s+[A-Za-z0-9\\-._~+/]+=*`)
+	secretKVPattern     = regexp.MustCompile(`(?i)\b(password|passwd|token|api[_-]?key|secret)\s*=\s*([^\s&]+)`) // key=value
+	secretBearerPattern = regexp.MustCompile(`(?i)\bbearer\s+[A-Za-z0-9._~+\\-/]+=*`)
 )
 
 func redactSecrets(input string) string {
