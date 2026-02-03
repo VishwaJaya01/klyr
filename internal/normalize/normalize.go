@@ -25,13 +25,9 @@ func Apply(input string, opts Options) Result {
 	if depth <= 0 {
 		depth = 2
 	}
-	iterations := depth - 1
-	if iterations < 0 {
-		iterations = 0
-	}
 
 	decoded := res.Normalized
-	for i := 0; i < iterations; i++ {
+	for i := 0; i < depth; i++ {
 		next, ok := decodeOnce(decoded)
 		if !ok || next == decoded {
 			break

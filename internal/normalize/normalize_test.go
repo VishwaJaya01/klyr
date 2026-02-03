@@ -3,12 +3,12 @@ package normalize
 import "testing"
 
 func TestApplyDecodeDepth(t *testing.T) {
-	res := Apply("%252e%252e%252f", Options{MaxDecodeDepth: 2})
-	if res.Normalized != "%2e%2e/" {
+	res := Apply("%252e%252e%252f", Options{MaxDecodeDepth: 1})
+	if res.Normalized != "%2e%2e%2f" {
 		t.Fatalf("expected partial decode, got %q", res.Normalized)
 	}
 
-	res = Apply("%252e%252e%252f", Options{MaxDecodeDepth: 3})
+	res = Apply("%252e%252e%252f", Options{MaxDecodeDepth: 2})
 	if res.Normalized != "../" {
 		t.Fatalf("expected full decode, got %q", res.Normalized)
 	}
