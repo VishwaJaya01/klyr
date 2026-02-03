@@ -70,7 +70,11 @@ for i in {1..10}; do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8
 
 Decision logs are written to `./logs/decisions.jsonl` on the host (mounted into the container). Each line is a JSON object.
 
-## Notes
+## Troubleshooting
 
-- The demo uses `demo/klyr.demo.yaml`. Adjust rates and thresholds there.
-- Learn mode requires enough samples to meet `minSamples`.
+- **`gofmt` fails in CI**: run `gofmt -w .` locally and commit.
+- **`go test` fails with missing `go.sum`**: run `go mod tidy`, commit `go.sum`.
+- **`golangci-lint` fails**: ensure you have the same golangci-lint version as CI and rerun `golangci-lint run`.
+- **Contracts not written**: ensure `state/` exists or the container has write access to `/state`.
+- **No metrics**: check `metrics.enabled: true` and `metrics.listen` in config; ensure port `9095` is open.
+- **Grafana has no data**: wait for a minute and verify Prometheus is scraping `klyr:9095`.
