@@ -39,7 +39,7 @@ func TestEvaluateContractStrictness(t *testing.T) {
 	}
 
 	violations = Evaluate(c, req, 20, EnforcementStrict)
-	if len(violations) != 5 {
-		t.Fatalf("strict expected 5 violations, got %d", len(violations))
+	if len(violations) != 6 {
+		t.Fatalf("strict expected 6 violations, got %d", len(violations))
 	}
 }
